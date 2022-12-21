@@ -2,92 +2,125 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-// You saw nothing !
-void reset(int n, bool visited[n][n]);
-// translate type of a square to a int
-int translate(char);
-// to check two square is connect or not
-bool isConnect(int n, int table[n][n][3], int, int, int, int);
-// to check are we have electricity in this square or not
+// you saw nothing!
+void resetVisited(int n, bool visited[n][n]);
+
+// translate type of cell to int
+int translateToInt(char);
+
+// check if two squares are connected or not
+bool isConnected(int n, int table[n][n][3], int, int, int, int);
+
+// check if we have electricity in this square or not
 bool isElectric(int n, int table[n][n][3], bool visited[n][n], int, int);
 
 // printing solution
-void print(int n, int table[n][n][3]);
+void printRotationTable(int n, int table[n][n][3]);
 
-// backtrack for finding solution
+// backtrack to find solution
 bool solution(int n, int table[n][n][3], bool visited[n][n], int, int);
+
+// input the table
+void input(int n, int table[n][n][3], bool visited[n][n], int *);
 
 int main()
 {
-    int n, computers = 0;
-    char help;
+    int n, computersCount = 0;
     scanf("%d", &n);
-    // the first index is type of what it is :  S = 0 , C = 1 , L = 2 , T = 3 , I = 4
     int table[n][n][3];
     bool visited[n][n];
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            scanf(" %c%d", &help, &table[i][j][1]);
-            table[i][j][0] = translate(help);
-            if (table[i][j][0] == 1)
-            {
-                computers++;
-            }
-            table[i][j][2] = table[i][j][1];
-            visited[i][j] = false;
-        }
-    }
+    input(n, table, visited, &computersCount);
+    printf("out%d", computersCount);
     bool end = solution(n, table, visited, 0, 0);
     return 0;
 }
 
-void reset(int n, bool visited[n][n])
+bool solution(int n, int table[n][n][3], bool visited[n][n], int i, int j)
 {
+    static long long callCount = 0;
+    int check = 0;
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
         {
-            visited[i][j] = false;
+            resetVisited(n, visited);
+            if (isElectric(n, table, visited, i, j))
+            {
+                check++;
+            }
         }
     }
+    if (check == n * n)
+    {
+        return true;
+    }
+
+    for (int z = 0; z < 4; z++)
+    {
+        printf("%d %d %d\n", i, j, z);
+        printRotationTable(n, table);
+        printf("%lld", callCount);
+        callCount++;
+        printf("\n");
+        if (i != n - 1)
+        {
+            if (solution(n, table, visited, i + 1, j) == true)
+            {
+                printRotationTable(n, table);
+                break;
+            }
+        }
+        else if (j != n - 1)
+        {
+            if (solution(n, table, visited, 0, j + 1) == true)
+            {
+                printRotationTable(n, table);
+                break;
+            }
+        }
+        table[i][j][1] += 1;
+        table[i][j][1] %= 4;
+    }
+
+    return false;
 }
 
-int translate(char x)
+bool isElectric(int n, int table[n][n][3], bool visited[n][n], int i, int j)
 {
-    if (x == 'S')
+    if ((i == n / 2 && j == n / 2))
     {
-        return 0;
+
+        return true;
     }
-    else
+    visited[i][j] = true;
+    if ((visited[(i + 1) % n][j]) == 0 && isConnected(n, table, (i + 1) % n, j, i, j))
     {
-        if (x == 'C')
-        {
-            return 1;
-        }
-        else
-        {
-            if (x == 'L')
-            {
-                return 2;
-            }
-            else
-            {
-                if (x == 'T')
-                {
-                    return 3;
-                }
-                else
-                {
-                    return 4;
-                }
-            }
-        }
+        if (isElectric(n, table, visited, (i + 1) % n, j))
+            return true;
     }
+
+    if ((visited[(i + n - 1) % n][j]) == 0 && isConnected(n, table, i, j, (i + n - 1) % n, j))
+    {
+        if (isElectric(n, table, visited, (i + n - 1) % n, j))
+            return true;
+    }
+
+    if ((visited[i][(j + 1) % n]) == 0 && isConnected(n, table, i, j, i, (j + 1) % n))
+    {
+        if (isElectric(n, table, visited, i, (j + 1) % n))
+            return true;
+    }
+
+    if ((visited[i][(j + n - 1) % n]) == 0 && isConnected(n, table, i, (j + n - 1) % n, i, j))
+    {
+        if (isElectric(n, table, visited, i, (j + n - 1) % n))
+            return true;
+    }
+
+    return false;
 }
 
-bool isConnect(int n, int table[n][n][3], int x1, int y1, int x2, int y2)
+bool isConnected(int n, int table[n][n][3], int x1, int y1, int x2, int y2)
 {
     // when they are in a column :
     if (y1 == y2)
@@ -178,42 +211,69 @@ bool isConnect(int n, int table[n][n][3], int x1, int y1, int x2, int y2)
     return false;
 }
 
-bool isElectric(int n, int table[n][n][3], bool visited[n][n], int i, int j)
+void resetVisited(int n, bool visited[n][n])
 {
-    if ((i == n / 2 && j == n / 2))
+    for (int i = 0; i < n; i++)
     {
-
-        return true;
+        for (int j = 0; j < n; j++)
+        {
+            visited[i][j] = false;
+        }
     }
-    visited[i][j] = true;
-    if ((visited[(i + 1) % n][j]) == 0 && isConnect(n, table, (i + 1) % n, j, i, j))
-    {
-        if (isElectric(n, table, visited, (i + 1) % n, j))
-            return true;
-    }
-
-    if ((visited[(i + n - 1) % n][j]) == 0 && isConnect(n, table, i, j, (i + n - 1) % n, j))
-    {
-        if (isElectric(n, table, visited, (i + n - 1) % n, j))
-            return true;
-    }
-
-    if ((visited[i][(j + 1) % n]) == 0 && isConnect(n, table, i, j, i, (j + 1) % n))
-    {
-        if (isElectric(n, table, visited, i, (j + 1) % n))
-            return true;
-    }
-
-    if ((visited[i][(j + n - 1) % n]) == 0 && isConnect(n, table, i, (j + n - 1) % n, i, j))
-    {
-        if (isElectric(n, table, visited, i, (j + n - 1) % n))
-            return true;
-    }
-
-    return false;
 }
 
-void print(int n, int table[n][n][3])
+void input(int n, int table[n][n][3], bool visited[n][n], int *computersCount)
+{
+    char cellType;
+    // the first index is type of what it is :  S = 0 , C = 1 , L = 2 , T = 3 , I = 4
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            scanf(" %c%d", &cellType, &table[i][j][1]);
+            table[i][j][0] = translateToInt(cellType);
+            if (table[i][j][0] == 1)
+                *computersCount = *computersCount + 1;
+            table[i][j][2] = table[i][j][1];
+            visited[i][j] = false;
+        }
+    }
+}
+
+int translateToInt(char x)
+{
+    if (x == 'S')
+    {
+        return 0;
+    }
+    else
+    {
+        if (x == 'C')
+        {
+            return 1;
+        }
+        else
+        {
+            if (x == 'L')
+            {
+                return 2;
+            }
+            else
+            {
+                if (x == 'T')
+                {
+                    return 3;
+                }
+                else
+                {
+                    return 4;
+                }
+            }
+        }
+    }
+}
+
+void printRotationTable(int n, int table[n][n][3])
 {
     for (int i = 0; i < n; i++)
     {
@@ -223,50 +283,4 @@ void print(int n, int table[n][n][3])
         }
         printf("\n");
     }
-}
-
-bool solution(int n, int table[n][n][3], bool visited[n][n], int i, int j)
-{
-    int check = 0;
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            ;
-            reset(n, visited);
-            if (isElectric(n, table, visited, i, j))
-            {
-                check++;
-            }
-        }
-    }
-    if (check == n * n)
-    {
-        return true;
-    }
-
-    for (int z = 0; z < 4; z++)
-    {
-        table[i][j][1] += z;
-        table[i][j][1] %= 4;
-        if (i != n - 1)
-        {
-            // printf("ghkj") ;
-            if (solution(n, table, visited, i + 1, j) == true)
-            {
-                print(n, table);
-                break;
-            }
-        }
-        else
-        {
-            if (solution(n, table, visited, 0, j + 1) == true)
-            {
-                print(n, table);
-                break;
-            }
-        }
-    }
-
-    return false;
 }
