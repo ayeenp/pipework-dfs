@@ -1,286 +1,121 @@
-
 #include <stdio.h>
-#include <stdbool.h>
+#include <stdbool.h> 
+int Q = 1 ; 
+void Rotation(int n , int table[n][n][4] , int , int , int   ) ;  
+void getcharType(int n , int table[n][n][4] , int , int , char) ; 
+bool Checkcell( int n , int table[n][n][4] , int , int  ) ; 
+void solution( int n , int table[n][n][4] , int table2[n][n][4] ,  int  , int) ; 
+void printTable(int n , int table[n][n][4] , int table2[n][n][4]) ; 
 
-// you saw nothing!
-void resetVisited(int n, bool visited[n][n]);
+int main(){
+   int n  , FirstRot; 
+   char celltype ; 
+   scanf("%d" , &n) ; 
+   int table[n][n][4] ; 
+   int table2[n][n][4] ; 
+   for (int i = 0; i < n; i++) { 
+     for (int j = 0; j < n; j++){
+        scanf(" %c%d" , &celltype , &FirstRot ) ; 
+        getcharType( n , table , i , j , celltype) ; 
+        Rotation( n , table , i , j , FirstRot) ; 
+        for(int k = 0 ; k < 4 ; k ++ ){
+            table2[i][j][k] = table[i][j][k] ; 
+        }
+     }
+   }
+ //  printTable( n , table ,table2) ; 
+   solution(n , table , table2 , 0 , 0 ) ; 
 
-// translate type of cell to int
-int translateToInt(char);
-
-// check if two squares are connected or not
-bool isConnected(int n, int table[n][n][3], int, int, int, int);
-
-// check if we have electricity in this square or not
-bool isElectric(int n, int table[n][n][3], bool visited[n][n], int, int);
-
-// printing solution
-void printRotationTable(int n, int table[n][n][3]);
-
-// backtrack to find solution
-bool solution(int n, int table[n][n][3], bool visited[n][n], int, int);
-
-// input the table
-void input(int n, int table[n][n][3], bool visited[n][n], int *);
-
-int main()
-{
-    int n, computersCount = 0;
-    scanf("%d", &n);
-    int table[n][n][3];
-    bool visited[n][n];
-    input(n, table, visited, &computersCount);
-    printf("out%d", computersCount);
-    bool end = solution(n, table, visited, 0, 0);
-    return 0;
+    return 0   ; 
 }
 
-bool solution(int n, int table[n][n][3], bool visited[n][n], int i, int j)
-{
-    static long long callCount = 0;
-    int check = 0;
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            resetVisited(n, visited);
-            if (isElectric(n, table, visited, i, j))
-            {
-                check++;
-            }
+void solution (int n , int table[n][n][4] , int table2[n][n][4] , int i  , int j ) {
+    if(Q == 1 ) {
+    //    printf("%d : %d \n" , i , j ) ; 
+      if( (i != n - 1) || (j != n - 1)) {
+      //  printf("%d : %d \n" , i , j ) ; 
+        for(int a = 0 ; a < 4 ; a ++  ){
+       solution(n , table ,table2 , ((i+1)%n) , j + (i + 1)/n ) ; 
+       Rotation( n , table , i , j , 1) ;
         }
-    }
-    if (check == n * n)
-    {
-        return true;
-    }
-
-    for (int z = 0; z < 4; z++)
-    {
-        printf("%d %d %d\n", i, j, z);
-        printRotationTable(n, table);
-        printf("%lld", callCount);
-        callCount++;
-        printf("\n");
-        if (i != n - 1)
-        {
-            if (solution(n, table, visited, i + 1, j) == true)
-            {
-                printRotationTable(n, table);
-                break;
-            }
-        }
-        else if (j != n - 1)
-        {
-            if (solution(n, table, visited, 0, j + 1) == true)
-            {
-                printRotationTable(n, table);
-                break;
-            }
-        }
-        table[i][j][1] += 1;
-        table[i][j][1] %= 4;
-    }
-
-    return false;
-}
-
-bool isElectric(int n, int table[n][n][3], bool visited[n][n], int i, int j)
-{
-    if ((i == n / 2 && j == n / 2))
-    {
-
-        return true;
-    }
-    visited[i][j] = true;
-    if ((visited[(i + 1) % n][j]) == 0 && isConnected(n, table, (i + 1) % n, j, i, j))
-    {
-        if (isElectric(n, table, visited, (i + 1) % n, j))
-            return true;
-    }
-
-    if ((visited[(i + n - 1) % n][j]) == 0 && isConnected(n, table, i, j, (i + n - 1) % n, j))
-    {
-        if (isElectric(n, table, visited, (i + n - 1) % n, j))
-            return true;
-    }
-
-    if ((visited[i][(j + 1) % n]) == 0 && isConnected(n, table, i, j, i, (j + 1) % n))
-    {
-        if (isElectric(n, table, visited, i, (j + 1) % n))
-            return true;
-    }
-
-    if ((visited[i][(j + n - 1) % n]) == 0 && isConnected(n, table, i, (j + n - 1) % n, i, j))
-    {
-        if (isElectric(n, table, visited, i, (j + n - 1) % n))
-            return true;
-    }
-
-    return false;
-}
-
-bool isConnected(int n, int table[n][n][3], int x1, int y1, int x2, int y2)
-{
-    // when they are in a column :
-    if (y1 == y2)
-    {
-        if ((table[x1][y1][0] == 1 && table[x1][y1][1] == 0) || (table[x1][y1][0] == 4 && table[x1][y1][1] % 2 == 0))
-        {
-            if (table[x2][y2][0] == 1 && table[x2][y2][1] == 2 && table[x1][y1][0] != 1)
-                return true;
-            if (table[x2][y2][0] == 2 && (table[x2][y2][1] == 1 || table[x2][y2][1] == 2))
-                return true;
-            if ((table[x2][y2][0] == 0 || table[x2][y2][0] == 3) && table[x2][y2][1] != 2)
-                return true;
-            if (table[x2][y2][0] == 4 && table[x2][y2][1] % 2 == 0)
-                return true;
-        }
-        else
-        {
-            if (table[x1][y1][0] == 2 && (table[x1][y1][1] == 0 || table[x1][y1][1] == 3))
-            {
-                if (table[x2][y2][0] == 1 && table[x2][y2][1] == 2 && table[x1][y1][0] != 1)
-                    return true;
-                if (table[x2][y2][0] == 2 && (table[x2][y2][1] == 1 || table[x2][y2][1] == 2))
-                    return true;
-                if ((table[x2][y2][0] == 0 || table[x2][y2][0] == 3) && table[x2][y2][1] != 2)
-                    return true;
-                if (table[x2][y2][0] == 4 && table[x2][y2][1] % 2 == 0)
-                    return true;
-            }
-            else
-            {
-                if ((table[x1][y1][0] == 0 || table[x1][y1][0] == 3) && table[x1][y1][1] != 0)
-                {
-                    if (table[x2][y2][0] == 1 && table[x2][y2][1] == 2 && table[x1][y1][0] != 1)
-                        return true;
-                    if (table[x2][y2][0] == 2 && (table[x2][y2][1] == 1 || table[x2][y2][1] == 2))
-                        return true;
-                    if ((table[x2][y2][0] == 0 || table[x2][y2][0] == 3) && table[x2][y2][1] != 2)
-                        return true;
-                    if (table[x2][y2][0] == 4 && table[x2][y2][1] % 2 == 0)
-                        return true;
+      }else{
+        for(int c = 0 ; c < 4 ; c++ ) {
+      //      printf("%d : %d\n" , i , j) ; 
+        int count  = 0 ; 
+        for(int x = 0 ; x < n ; x ++){
+            for( int y = 0 ; y < n ; y ++ ){
+                if (Checkcell(n , table , x , y ) == 1 ){
+                    count ++ ; 
                 }
-            }
         }
+      }
+     // printf("%d\n" , count) ; 
+      if( count == (n * n) ){
+        printTable( n , table2 , table) ; 
+        Q = 0 ; 
+        break ;
+      }
+      Rotation(n , table , i , j , 1 ) ; 
     }
-    else
-    {
-        // when they are in a row
-        if ((table[x1][y1][0] == 1 && table[x1][y1][1] == 1) || (table[x1][y1][0] == 4 && table[x1][y1][1] % 2 == 1))
-        {
-            if (table[x2][y2][0] == 1 && table[x1][y1][0] != 1 && table[x2][y2][1] == 3)
-                return true;
-            if (table[x2][y2][0] == 2 && (table[x2][y2][1] == 2 || table[x2][y2][1] == 3))
-                return true;
-            if ((table[x2][y2][0] == 0 || table[x2][y2][0] == 3) && table[x2][y2][1] != 3)
-                return true;
-            if (table[x2][y2][0] == 4 && table[x2][y2][1] % 2 == 1)
-                return true;
-        }
-        else
-        {
-            if (table[x1][y1][0] == 2 && (table[x1][y1][1] == 0 || table[x1][y1][1] == 1))
-            {
-                if (table[x2][y2][0] == 1 && table[x1][y1][0] != 1 && table[x2][y2][1] == 3)
-                    return true;
-                if (table[x2][y2][0] == 2 && (table[x2][y2][1] == 2 || table[x2][y2][1] == 3))
-                    return true;
-                if ((table[x2][y2][0] == 0 || table[x2][y2][0] == 3) && table[x2][y2][1] != 3)
-                    return true;
-                if (table[x2][y2][0] == 4 && table[x2][y2][1] % 2 == 1)
-                    return true;
-            }
-            else
-            {
-                if ((table[x1][y1][0] == 0 || table[x1][y1][0] == 3) && table[x1][y1][1] != 1)
-                {
-                    if (table[x2][y2][0] == 1 && table[x1][y1][0] != 1 && table[x2][y2][1] == 3)
-                        return true;
-                    if (table[x2][y2][0] == 2 && (table[x2][y2][1] == 2 || table[x2][y2][1] == 3))
-                        return true;
-                    if ((table[x2][y2][0] == 0 || table[x2][y2][0] == 3) && table[x2][y2][1] != 3)
-                        return true;
-                    if (table[x2][y2][0] == 4 && table[x2][y2][1] % 2 == 1)
-                        return true;
+   }
+  }
+}
+
+void printTable(int n , int table[n][n][4] , int table2[n][n][4]) {
+    for(int i = 0 ; i < n ; i ++){
+        for (int j = 0; j < n; j++){
+            for(int k = 0 ; k  < 4 ; k ++) { 
+                int check = 0 ;
+                for(int z = 0 ;  z < 4 ; z++){
+                    if(table[i][j][z] == table2[i][j][z]) check ++  ; 
                 }
-            }
-        }
-    }
-    return false;
-}
-
-void resetVisited(int n, bool visited[n][n])
-{
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            visited[i][j] = false;
-        }
-    }
-}
-
-void input(int n, int table[n][n][3], bool visited[n][n], int *computersCount)
-{
-    char cellType;
-    // the first index is type of what it is :  S = 0 , C = 1 , L = 2 , T = 3 , I = 4
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            scanf(" %c%d", &cellType, &table[i][j][1]);
-            table[i][j][0] = translateToInt(cellType);
-            if (table[i][j][0] == 1)
-                *computersCount = *computersCount + 1;
-            table[i][j][2] = table[i][j][1];
-            visited[i][j] = false;
-        }
-    }
-}
-
-int translateToInt(char x)
-{
-    if (x == 'S')
-    {
-        return 0;
-    }
-    else
-    {
-        if (x == 'C')
-        {
-            return 1;
-        }
-        else
-        {
-            if (x == 'L')
-            {
-                return 2;
-            }
-            else
-            {
-                if (x == 'T')
-                {
-                    return 3;
+                if(check == 4 ) {
+                    printf("%d " , k) ; 
+                    break;
                 }
-                else
-                {
-                    return 4;
-                }
+                Rotation( n , table , i , j  , 1) ; 
             }
         }
+        printf("\n") ;
+        
     }
 }
 
-void printRotationTable(int n, int table[n][n][3])
-{
-    for (int i = 0; i < n; i++)
+
+bool Checkcell( int n , int table[n][n][4] , int i  , int j  ) {
+   if(table[i][j][1] != table[i][(j+1)%n][3]) return false ; 
+   if(table[i][j][2] != table[(i+1)%n][j][0]) return false ; 
+   if(table[i][j][3] != table[i][(j+n-1)%n][1]) return false ; 
+   if(table[i][j][0] != table[(i+n-1)%n][j][2]) return false ; 
+
+   return true ;
+}
+
+void Rotation(int n , int table[n][n][4] , int i , int j  , int x  ) {
+    int fix[4] ; 
+    for (int  z = 0; z < 4; z++)
     {
-        for (int j = 0; j < n; j++)
-        {
-            printf("%d ", (n + table[i][j][1] - table[i][j][2]) % n);
-        }
-        printf("\n");
+        fix[z] = table[i][j][z] ; 
     }
+    
+     for (int  z = 0; z < 4; z++)
+    {
+        table[i][j][(z + x)%4 ] = fix[z] ;
+    }
+}
+
+void getcharType(int n , int table[n][n][4] , int i , int j  , char type) {
+ if(type == 'S' || type == 'T'){
+    table[i][j][0] = 0  , table[i][j][1] = 1  , table[i][j][2] = 1  , table[i][j][3] = 1  ;
+ } else{
+    if(type == 'C'){
+        table[i][j][0] = 1  ,table[i][j][1] = 0  ,table[i][j][2] = 0  ,table[i][j][3] = 0   ; 
+    } else{
+        if(type == 'L') {
+            table[i][j][0] = 1  ,table[i][j][1] = 1  ,table[i][j][2] = 0  ,table[i][j][3] = 0   ;
+        } else{
+            table[i][j][0] = 1  ,table[i][j][1] = 0  ,table[i][j][2] = 1  ,table[i][j][3] = 0   ; 
+        }
+    }
+ }
 }
