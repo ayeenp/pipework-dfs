@@ -3,32 +3,49 @@
 
 int checkOrder[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 
-void input(int n, int table[n][n][4], int table2[n][n][4], bool fixed[n][n]);
-void rotate(int n, int table[n][n][4], int, int, int);
-void getCharType(int n, int table[n][n][4], int, int, char);
-bool checkCell(int n, int table[n][n][4], int, int);
+void Rotation(int n, int table[n][n][4], int, int, int);
+void getcharType(int n, int table[n][n][4], int, int, char);
+bool Checkcell(int n, int table[n][n][4], int, int);
 bool solution(int n, int table[n][n][4], int table2[n][n][4], bool fixed[n][n], int, int);
 void printTable(int n, int table[n][n][4], int table2[n][n][4]);
 bool checkBranch(int n, int table[n][n][4], bool fixed[n][n], int, int);
-void copyFixes(int n, bool fixed[n][n], bool lastfixed[n][n]);
-bool backToServer(int n, int table[n][n][4], bool visited[n][n], int, int);
-void resetVisited(int n, bool visited[n][n]);
+void Copyfixes(int n, bool fixed[n][n], bool lastfixed[n][n]);
+bool BackToServer(int n, int table[n][n][4], bool visited[n][n], int, int , int , int );
+void Resetvisited(int n, bool visited[n][n]);
 bool isStraightWire(int n, int table[n][n][4], int, int);
 bool isLastCell(int n, bool fixed[n][n]);
+bool IsAns(int n , int table[n][n][4]  ) ;  
+bool Iscomputer( int n , int table[n][n][4] , int  , int  );
+bool Table_loop( int n , int table[n][n][4]) ;
 
 int main()
 {
-    int n;
+    int n, FirstRot;
+    char celltype;
     scanf("%d", &n);
     int table[n][n][4];
     int table2[n][n][4];
     bool fixed[n][n];
-    input(n, table, table2, fixed);
-    if (solution(n, table, table2, fixed, n / 2, n / 2))
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            scanf(" %c%d", &celltype, &FirstRot);
+            getcharType(n, table, i, j, celltype);
+            Rotation(n, table, i, j, FirstRot);
+            for (int k = 0; k < 4; k++)
+            {
+                table2[i][j][k] = table[i][j][k];
+            }
+            fixed[i][j] = 0;
+        }
+    }
+    
+    if (solution(n, table, table2, fixed, n / 2 , n / 2 ))
         printTable(n, table, table2);
     else
         printf("WRONG");
-
+   //  printf("%d"  ,Table_loop( n , table) ) ; 
     return 0;
 }
 
@@ -46,8 +63,14 @@ bool solution(int n, int table[n][n][4], int table2[n][n][4], bool fixed[n][n], 
     {
         if (checkBranch(n, table, fixed, i, j))
         {
-            if(isLast)
-                return true;
+            if(isLast){
+                if(IsAns( n, table)){
+                   // printf("%d\n" , Table_loop( n, table)) ; 
+                    if(Table_loop(n , table)) return false ; 
+                    return true ;
+                }
+                return false;
+            }
             bool fixed2[n][n];
             for (int k = 0; k < 4; k++)
             {
@@ -55,59 +78,31 @@ bool solution(int n, int table[n][n][4], int table2[n][n][4], bool fixed[n][n], 
                 int j2 = (n + j + checkOrder[k][1]) % n;
                 if (fixed[i2][j2] == 0)
                 {
-                    copyFixes(n, fixed2, fixed);
+                    Copyfixes(n, fixed2, fixed);
                     if (solution(n, table, table2, fixed, i2, j2))
                         return true;
-                    copyFixes(n, fixed, fixed2);
+                    Copyfixes(n, fixed, fixed2);
                     break;
                 }
             }
         }
         //printf("Rotate:s %d %d\n", i, j);
-        rotate(n, table, i, j, 1);
+        Rotation(n, table, i, j, 1);
     }
-
-    int isAns = 1;
-    for (int z = 0; z < n; z++)
-    {
-        for (int y = 0; y < n; y++)
-        {
-            if (!checkCell(n, table, z, y))
-            {
-                isAns = 0;
-                break;
-            }
-        }
-        if (isAns == 0)
-            break;
-    }
-    if (isAns == 1)
-    {
-        printf("here");
-        for (int z = 0; z < n; z++)
-        {
-            for (int y = 0; y < n; y++)
-            {
-                bool visited[n][n];
-                resetVisited(n, visited);
-                if (!backToServer(n, table, visited, z, y))
-                {
-                    isAns = 0;
-                    break;
-                }
-            }
-            if (isAns == 0)
-                break;
-        }
-        if (isAns == 1)
-            return true;
-    }
-    return false;
+    
+//    if(IsAns( n , table)){
+        //printf("%d\n" , Table_loop( n , table)) ; 
+      //  if(Table_loop( n, table)){
+    //        return false ; 
+    //    }else{
+      //      return true ; 
+    //    }
+  //  }else{
+    return false ;
+//    }
 }
-
-bool backToServer(int n, int table[n][n][4], bool visited[n][n], int i, int j)
-{
-    if ((i == n / 2) && (j == n / 2))
+bool BackToServer(int n, int table[n][n][4], bool visited[n][n], int i, int j , int x , int y ){
+    if ((i == x ) && (j == y) )
     {
         return true;
     }
@@ -115,36 +110,35 @@ bool backToServer(int n, int table[n][n][4], bool visited[n][n], int i, int j)
     if ((table[i][j][1] == 1 && table[i][(j + 1) % n][3] == 1) && visited[i][(j + 1) % n] == 0)
     {
         // bool visited2[n][n] ;
-        // copyFixes( n , visited2 , visited) ;
-        if (backToServer(n, table, visited, i, (j + 1) % n))
+        // Copyfixes( n , visited2 , visited) ;
+        if (BackToServer(n, table, visited, i, (j + 1) % n , x , y))
             return true;
     }
     if ((table[i][j][2] == 1 && table[(i + 1) % n][j][0] == 1) && visited[(i + 1) % n][j] == 0)
     {
         // bool visited2[n][n] ;
-        // copyFixes( n , visited2 , visited) ;
-        if (backToServer(n, table, visited, (i + 1) % n, j))
+        // Copyfixes( n , visited2 , visited) ;
+        if (BackToServer(n, table, visited, (i + 1) % n, j , x , y))
             return true;
     }
     if ((table[i][j][0] == 1 && table[(i + n - 1) % n][j][2] == 1) && visited[(i + n - 1) % n][j] == 0)
     {
         // bool visited2[n][n] ;
-        // copyFixes( n , visited2 , visited) ;
-        if (backToServer(n, table, visited, (i + n - 1) % n, j))
+        // Copyfixes( n , visited2 , visited) ;
+        if (BackToServer(n, table, visited, (i + n - 1) % n, j , x ,y ))
             return true;
     }
     if ((table[i][j][3] == 1 && table[i][(j + n - 1) % n][1] == 1) && visited[i][(j + n - 1) % n] == 0)
     {
         //          bool visited2[n][n] ;
-        //            copyFixes( n , visited2 , visited) ;
-        if (backToServer(n, table, visited, i, (j + n - 1) % n))
+        //            Copyfixes( n , visited2 , visited) ;
+        if (BackToServer(n, table, visited, i, (j + n - 1) % n , x , y))
             return true;
     }
     return false;
 }
 
-bool checkBranch(int n, int table[n][n][4], bool fixed[n][n], int i, int j)
-{
+bool checkBranch(int n, int table[n][n][4], bool fixed[n][n], int i, int j){
     int temp[4] = {2, 2, 2, 2};
     if (fixed[(i + n - 1) % n][j])
         temp[0] = table[(i + n - 1) % n][j][2];
@@ -168,28 +162,48 @@ bool checkBranch(int n, int table[n][n][4], bool fixed[n][n], int i, int j)
     return false;
 }
 
-void input(int n, int table[n][n][4], int table2[n][n][4], bool fixed[n][n])
-{
-    int firstRot;
-    char celltype;
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
+bool IsAns(int n , int table[n][n][4]  ) { 
+    int IsAns = 1;
+     for (int z = 0; z < n; z++)
+     {
+        for (int y = 0; y < n; y++)
         {
-            scanf(" %c%d", &celltype, &firstRot);
-            getCharType(n, table, i, j, celltype);
-            rotate(n, table, i, j, firstRot);
-            for (int k = 0; k < 4; k++)
+            if (!Checkcell(n, table, z, y))
             {
-                table2[i][j][k] = table[i][j][k];
+                IsAns = 0;
+                break;
             }
-            fixed[i][j] = 0;
         }
+        if (IsAns == 0)
+            break;
+     }
+     if (IsAns == 1)
+     {
+        for (int z = 0; z < n; z++)
+        {
+            for (int y = 0; y < n; y++)
+            {
+                bool visited[n][n];
+                Resetvisited(n, visited);
+                if (!BackToServer(n, table, visited, z, y , n/2 , n/2))
+                {
+                    IsAns = 0;
+                    break;
+                }
+            }
+            if (IsAns == 0)
+                break;
+        }
+        if (IsAns == 1)
+            return true;
     }
+    return false;
+    
+    
+    
 }
 
-void printTable(int n, int table[n][n][4], int table2[n][n][4])
-{
+void printTable(int n, int table[n][n][4], int table2[n][n][4]){
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
@@ -216,8 +230,7 @@ void printTable(int n, int table[n][n][4], int table2[n][n][4])
     }
 }
 
-bool checkCell(int n, int table[n][n][4], int i, int j)
-{
+bool Checkcell(int n, int table[n][n][4], int i, int j){
     if (table[i][j][1] != table[i][(j + 1) % n][3])
         return false;
     if (table[i][j][2] != table[(i + 1) % n][j][0])
@@ -230,8 +243,29 @@ bool checkCell(int n, int table[n][n][4], int i, int j)
     return true;
 }
 
-void rotate(int n, int table[n][n][4], int i, int j, int x)
-{
+bool Table_loop( int n , int table[n][n][4]) { 
+    
+    for (int s = 0; s < n  ; s++) {
+            for (int w = 0; w < n; w++) {
+                         int lastcheck = 0 ; 
+                for (int p = 0; p < n; p++) {
+                    for (int q = 0; q < n; q++) {
+                        if( Iscomputer(n , table , p , q) ){
+                            bool visited[n][n] ; 
+                            Resetvisited( n,  visited) ; 
+                            if(BackToServer(n , table , visited ,  s , w , p , q)) lastcheck ++ ; 
+                            if(lastcheck == 1 ) break ; 
+                          }
+                        }
+                        if(lastcheck == 1 ) break ; 
+                    }
+                    if(lastcheck == 0 ) return true  ; 
+                }
+            }
+      return false ; 
+}
+
+void Rotation(int n, int table[n][n][4], int i, int j, int x){
     int fix[4];
     for (int z = 0; z < 4; z++)
     {
@@ -244,8 +278,7 @@ void rotate(int n, int table[n][n][4], int i, int j, int x)
     }
 }
 
-bool isLastCell(int n, bool fixed[n][n])
-{
+bool isLastCell(int n, bool fixed[n][n]){
     int fixedCount = 0;
     for (int i = 0; i < n; i++)
     {
@@ -260,15 +293,13 @@ bool isLastCell(int n, bool fixed[n][n])
     return false;
 }
 
-bool isStraightWire(int n, int table[n][n][4], int i, int j)
-{
+bool isStraightWire(int n, int table[n][n][4], int i, int j){
     if (table[i][j][0] == table[i][j][2] && table[i][j][1] == table[i][j][3])
         return true;
     return false;
 }
 
-void getCharType(int n, int table[n][n][4], int i, int j, char type)
-{
+void getcharType(int n, int table[n][n][4], int i, int j, char type){
     if (type == 'S' || type == 'T')
     {
         table[i][j][0] = 0, table[i][j][1] = 1, table[i][j][2] = 1, table[i][j][3] = 1;
@@ -293,8 +324,7 @@ void getCharType(int n, int table[n][n][4], int i, int j, char type)
     }
 }
 
-void copyFixes(int n, bool fixed[n][n], bool lastfixed[n][n])
-{
+void Copyfixes(int n, bool fixed[n][n], bool lastfixed[n][n]){
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
@@ -304,8 +334,7 @@ void copyFixes(int n, bool fixed[n][n], bool lastfixed[n][n])
     }
 }
 
-void resetVisited(int n, bool visited[n][n])
-{
+void Resetvisited(int n, bool visited[n][n]){
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n; j++)
@@ -313,4 +342,14 @@ void resetVisited(int n, bool visited[n][n])
             visited[i][j] = false;
         }
     }
+}
+
+bool Iscomputer( int n , int table[n][n][4] , int i , int j ) {
+    int PCconnect = 0 ;
+    for (int k = 0 ; k < 4 ; k++) {
+        if(table[i][j][k]) PCconnect ++ ;
+    }
+    
+    if(PCconnect == 1) return true ; 
+    return false ; 
 }
